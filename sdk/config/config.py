@@ -16,11 +16,10 @@ class Config(object):
     REDIS_CONST = "REDIS"
     KAFKA_CONST = "KAFKA"
 
-    def __init__(self, json_config):
+    def __init__(self):
         self.mode = os.environ.get('MODE', 'TRAIN')
-        logger.info("current mode is {}".format(self.mode))
-        # self.json_config = json.loads(os.environ.get('CONFIG', '{}'))
-        self.json_config = json_config
+        # logger.info("current mode is {}".format(self.mode))
+        self.json_config = json.loads(os.environ.get('CONFIG', '{}'))
 
         self.model_path = self.json_config["modelPath"]
         self.result_path = self.json_config["resultPath"]
