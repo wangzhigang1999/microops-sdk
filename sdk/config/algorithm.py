@@ -20,14 +20,15 @@ example:
 
 class Algorithm:
     def __init__(self, config):
-        self.json_config = config
+        # self.id = self.json_config["id"]
+        self.__name = config["name"]
+        # self.description = self.json_config["description"]
+        # self.author = self.json_config["author"]
+        # self.version = self.json_config["version"]
+        # self.url = self.json_config["url"]
+        # self.__type = self.json_config["type"]
+        # self.command = self.json_config["command"]
+        # self.hashString = self.json_config["hashString"]
 
-        self.id = self.json_config["id"]
-        self.name = self.json_config["name"]
-        self.description = self.json_config["description"]
-        self.author = self.json_config["author"]
-        self.version = self.json_config["version"]
-        self.url = self.json_config["url"]
-        self.type = self.json_config["type"]
-        self.command = self.json_config["command"]
-        self.hashString = self.json_config["hashString"]
+    def get_name(self):
+        return self.__name

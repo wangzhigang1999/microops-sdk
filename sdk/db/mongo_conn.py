@@ -64,9 +64,10 @@ class MongoConnectClient:
         db = self.client[db]
         return db[collection].find_one()
 
-    def get_all(self, db, collection, query=None):
+    def get_all(self, db, collection, query=None, projects=None):
         """
         获取某个 collection 的所有数据
+        :param projects: 投影的字段
         :param query: 查询语句
         :param collection: collection名称
         :return: 所有的Object
@@ -74,7 +75,9 @@ class MongoConnectClient:
         db = self.client[db]
         if query is None:
             query = {}
-        return db[collection].find(query)
+        if projects is None:
+            projects = {}
+        return db[collection].find(query, projects)
 
     def get_last(self, db, collection):
         """

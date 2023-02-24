@@ -1,40 +1,88 @@
 import json
 import os
 
-from sdk.config.datasource import DataSource
-from sdk.config.storage import Storage
+from sdk.config.datasource.kafka_datasource import KafkaDataSource
+from sdk.config.datasource.mongo_datasource import MongoDataSource
+from sdk.config.storage.mongo_storage import MongoStorage
+from sdk.config.storage.redis_storage import RedisStorage
+from sdk.config.storage.result_storage import ResultStorage
+from sdk.config.storage.model_storage import ModelStorage
 from sdk.config.algorithm import Algorithm
+from loguru import logger
 
 
 class Config(object):
+    MONGO_CONST = "MONGODB"
+    REDIS_CONST = "REDIS"
+    KAFKA_CONST = "KAFKA"
 
-    def __init__(self):
-        self.MODE = os.environ.get('MODE', 'TRAIN')
+    def __init__(self, json_config):
+        self.mode = os.environ.get('MODE', 'TRAIN')
+        logger.info("current mode is {}".format(self.mode))
+        # self.json_config = json.loads(os.environ.get('CONFIG', '{}'))
+        self.json_config = json_config
 
-        self.json_config = json.loads(os.environ.get('CONFIG', '{}'))
+        self.model_path = self.json_config["modelPath"]
+        self.result_path = self.json_config["resultPath"]
 
-        self.storage = Storage(self.json_config["storage"])
+        self.__init_storage()
+        self.__init_datasource()
+
         self.algorithm = Algorithm(self.json_config["algorithm"])
-        self.datasource = DataSource(self.json_config["datasource"])
+        self.dataset_start_time = self.json_config["datasetStartTime"]
+        self.dataset_end_time = self.json_config["datasetEndTime"]
+        self.selected_fields = self.json_config["selectedFields"]
+        self.hyper_parameters = self.json_config["hyperParams"]
 
-        self.model_path = self.json_config["ModelPath"]
+    def __init_storage(self):
+        storage_list = self.json_config["storage"]
+        for storage in storage_list:
+            if storage["usage"] == "model":
+                self.__model_storage = ModelStorage(Config.__get_storage_instance(storage))
+            elif storage["usage"] == "result":
+                self.__result_storage = ResultStorage(Config.__get_storage_instance(storage))
+            else:
+                logger.error("unknown storage usage: {}".format(storage["usage"]))
+                return
 
-        self.hyper_parameters = self.json_config["HyperParams"]
+    @staticmethod
+    def __get_storage_instance(storage):
+        storage_type = storage["type"]
+        if storage_type == Config.REDIS_CONST:
+            return RedisStorage(storage)
+        elif storage_type == Config.MONGO_CONST:
+            return MongoStorage(storage)
+        else:
+            logger.error("unknown storage type: {}".format(storage["type"]))
+            return
 
-    def getMode(self):
-        return self.MODE
+    def __init_datasource(self):
+        datasource = self.json_config["dataSource"]
+        if self.mode == "TRAIN":
+            self.__train_datasource = Config.__get_datasource_instance(datasource)
+        elif self.mode == "INFERENCE":
+            # inference only need a stream handler
+            self.__inference_datasource = Config.__get_datasource_instance(datasource)
 
-    def getStorage(self):
-        return self.storage
+    @staticmethod
+    def __get_datasource_instance(datasource):
+        datasource_type = datasource["type"]
+        if datasource_type == Config.MONGO_CONST:
+            return MongoDataSource(datasource)
+        elif datasource_type == Config.KAFKA_CONST:
+            return KafkaDataSource(datasource)
+        else:
+            logger.error("unknown datasource type: {}".format(datasource["type"]))
+            return
 
-    def getAlgorithm(self):
-        return self.algorithm
+    def get_model_storage(self):
+        return self.__model_storage
 
-    def getDataSource(self):
-        return self.datasource
+    def get_result_storage(self):
+        return self.__result_storage
 
-    def getModelPath(self):
-        return self.model_path
+    def get_train_datasource(self):
+        return self.__train_datasource
 
-    def getHyperParameters(self):
-        return self.hyper_parameters
+    def get_inference_datasource(self):
+        return self.__inference_datasource

@@ -1,0 +1,68 @@
+{
+  "hyperParams": {
+    "batch_size": 32,
+    "epochs": 10
+  },
+  "modelPath": "testModelPath",
+  "resultPath":  "result",
+  "trainJobName": "nginx-pure-data-ecl-64778820",
+  "datasetStartTime": -1,
+  "ckptName": "nginx-pure_data.ECL-64778820",
+  "storage": [
+    {
+      "type": "REDIS",
+      "usage": "model",
+      "host": "localhost",
+      "port": 6379,
+      "password": "",
+      "properties": {
+        "db": 0
+      }
+    },
+    {
+      "type": "MONGODB",
+      "usage": "result",
+      "host": "10.112.169.94",
+      "port": 30332,
+      "username": "root",
+      "password": "root",
+      "properties": {
+        "db": "evaluation"
+      }
+    }
+  ],
+  "selectedFields": [
+    "MT_000",
+    "MT_001",
+    "date"
+  ],
+  "algorithm": {
+    "type": "KNN",
+    "name": "nginx",
+    "description": "nginx",
+    "author": "wanz",
+    "version": "1.0",
+    "url": "nginx",
+    "hyperParameters": {
+      "hello": "world"
+    },
+    "command": " ",
+    "hashString": "104760218104760218364187848563104760218197974952332",
+    "id": "63f320a11a1cf03bbd8f01c6"
+  },
+  "datasetEndTime": -1,
+  "dataSource": {
+    "type": "MONGODB",
+    "name": "pure_data.ECL",
+    "host": "10.112.169.94",
+    "port": 30332,
+    "username": "root",
+    "password": "root",
+    "properties": {
+      "db": "pure_data",
+      "collection": "ECL",
+      "hashString": "394858059",
+      "id": "63f57aa7d1773d7393506d39"
+    }
+  }
+}
