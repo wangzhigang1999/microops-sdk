@@ -31,7 +31,7 @@ class AlgoTemplate:
             self.model = self.build_model(self.config.hyper_params)
             self.__train()
         else:
-            self.model = self.config.model_storage.load_model(self.config.model_path)
+            self.model, self.args = self.config.model_storage.load_model(self.config.model_path)
             self.__inference()
 
     def __train(self):
@@ -47,7 +47,7 @@ class AlgoTemplate:
 
         logger.info("..............Training model.............")
         # train model
-        model, args = self.train(df, self.config.hyper_params)
+        model, args = self.train(self.model, df, self.config.hyper_params)
         # store model
         logger.info("..............Storing model.............")
         self.config.model_storage.save_model(self.config.model_path, model, args)
@@ -96,9 +96,10 @@ class AlgoTemplate:
         metric_series_list = [self.metric_map[metric] for metric in self.config.selected_fields]
         metric_df = pd.concat(metric_series_list, axis=1)
         metric_df.columns = self.config.selected_fields  # set column names after concat
+        metric_df = metric_df.reindex(columns=sorted(metric_df.columns)) # order df columns
         # run model in window
         logger.info("window dataframe for inference:\n {}".format(metric_df))
-        result_series = self.inference(metric_df)
+        result_series = self.inference(self.model, self.args, metric_df)
         logger.info("inference result series:\n {}".format(result_series))
         # store result
         if self.first_run:
@@ -116,24 +117,21 @@ class AlgoTemplate:
         for message in self.config.inference_datasource.get_stream_handler():
             message_value = message.value
             message_value["value"] = float(message_value["value"])
-            logger.info("current message value is:\n {}".format(message_value))
             if self.__is_selected(message_value):
+                logger.info("current message value is:\n {}".format(message_value))
                 self.__load_window(message_value)
                 if self.__all_meet_size():
                     self.__run_model()
                     self.__window_pop()
-
-    def get_model(self):
-        return self.model
 
     @abstractmethod
     def build_model(self, hyper_params: dict) -> object:
         pass
 
     @abstractmethod
-    def train(self, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
+    def train(self, model: object, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
         pass
 
     @abstractmethod
-    def inference(self, df: pd.DataFrame) -> pd.Series:
+    def inference(self, model: object, args: dict, df: pd.DataFrame) -> pd.Series:
         pass

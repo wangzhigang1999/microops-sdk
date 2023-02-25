@@ -15,7 +15,7 @@ class MongoDataSource(BatchDataSource):
         self.db = self.properties["db"]
         self.collection = self.properties["collection"]
         self.default_projected_fields = {"timestamp": 1, "_id": 0}
-        self.default_df_index = "timestamp"
+        self.default_df_index = "timestamp"  # TODO index默认就是时间，应该只允许设置时间的变量名，get_data中注意同步
 
     def get_default_projected_fields(self):
         return self.default_projected_fields
@@ -36,13 +36,15 @@ class MongoDataSource(BatchDataSource):
 
         query = {}
         if start_time != -1:
-            query["start_time"] = {"$gte": start_time}
+            query["timestamp"] = {"$gte": start_time}
         if end_time != -1:
-            query["end_time"] = {"$lte": end_time}
-
+            query["timestamp"] = {"$lte": end_time}
+        logger.info("mongo datasource query: {} projects:{}".format(query, projects))
         records = self.client.get_all(self.db, self.collection, query=query, projects=projects)
 
         df = pd.DataFrame(list(records))
         df = df.set_index(self.default_df_index)
+        df = df.reindex(columns=sorted(df.columns))  # order df columns
+        df = df.apply(pd.to_numeric)  # convert all columns to numeric
         logger.info("get train data dataframe, head is : {}".format(df.head()))
         return df
