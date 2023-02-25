@@ -2,151 +2,138 @@ import json
 import os
 import pickle
 from abc import abstractmethod
+from datetime import datetime
 
 import pandas as pd
+from dateutil import tz
 from loguru import logger
 
-from sdk.config.inference_config import InferenceConfig
-from sdk.config.kafka_config import KafkaConfig
-from sdk.config.mongo_config import MongoConfig
-from sdk.config.redis_config import RedisConfig
-from sdk.config.train_config import TrainConfig
+from sdk.config.config import Config
+
+
+def parse_date(date_str):
+    t = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=tz.tzutc())
+    return int(t.timestamp())
 
 
 class AlgoTemplate:
     def __init__(self):
-
+        self.config = Config()
         self.model = None
 
-        try:
-            self.mode = os.environ["MODE"]
-        except KeyError:
-            self.mode = "train"
+        self.metric_map = self.__get_map()
+        self.time_window = []
+        self.metric_len = len(self.config.selected_fields)
+        self.count = 0  # count number of metrics that met window_sz so that can give users the whole window
+        self.first_run = True
 
-        if self.mode == "train":
-            self.train_config: TrainConfig = self.load_train_config()
-        elif self.mode == "inference":
-            self.inference_config: InferenceConfig = self.load_inference_config()
+        if self.config.mode == "TRAIN":
+            self.model = self.build_model(self.config.hyper_params)
+            self.__train()
+        else:
+            self.model = self.config.model_storage.load_model(self.config.model_path)
+            self.__inference()
 
-        self.build_model()
-
-    def build_model(self):
-        self.model = self.load_model()
-
-    @staticmethod
-    def parse_config(config) -> (str, object):
-        if config["type"] == "KAFKA":
-            kafkaConfig = KafkaConfig(config["host"], config["port"], config["properties"], config["username"], config["password"])
-            return "kafkaConfig", kafkaConfig
-
-        elif config["type"] == "REDIS":
-            redisConfig = RedisConfig(config["host"], config["port"], config["password"], config["properties"])
-            return "redisConfig", redisConfig
-
-        elif config["type"] == "MONGO":
-            mongoConfig = MongoConfig(config["host"], config["port"], config["username"], config["password"], config["properties"])
-            return "mongoConfig", mongoConfig
-
-        elif config["type"] == "JOB":
-            model_name = config["name"]
-            return "model_name", model_name
-
-    @staticmethod
-    def load_inference_config() -> InferenceConfig:
-        configs: list = json.loads(os.environ["SCHEDULE_CONFIG"])
-        cfg = InferenceConfig()
-        for config in configs:
-            attr, config = AlgoTemplate.parse_config(config)
-            cfg.__setattr__(attr, config)
-        return cfg
-
-    @staticmethod
-    def load_train_config() -> TrainConfig:
-        configs: list = json.loads(os.environ["TRAIN_CONFIG"])
-        cfg = TrainConfig()
-        for config in configs:
-            attr, config = AlgoTemplate.parse_config(config)
-            cfg.__setattr__(attr, config)
-        return cfg
-
-    def train(self):
-
+    def __train(self):
         logger.info("..............Starting training..............")
 
         logger.info("..............Loading data..............")
         # load data
-        data = self.train_config.getMongoClient().get_all(self.train_config.mongo.db,
-                                                          self.train_config.mongo.collection,
-                                                          query={"timestamp": {"$gte": self.train_config.mongo.start_time,
-                                                                               "$lte": self.train_config.mongo.end_time}})
+        df = self.config.train_datasource.get_data(
+            start_time=self.config.dataset_start_time,
+            end_time=self.config.dataset_end_time,
+            selected_fields=self.config.selected_fields
+        )
 
-        #  convert to pandas dataframe
-        frame = pd.DataFrame(data)
-        logger.info("Raw Data shape: {}".format(frame.shape))
-
-        frame = self.preprocess(frame)
-        logger.info("Preprocessed Data shape: {}".format(frame.shape))
-
+        logger.info("..............Training model.............")
         # train model
-        model = self.train_model(frame)
-        self.save_model(model)
+        model, args = self.train(df, self.config.hyper_params)
+        # store model
+        logger.info("..............Storing model.............")
+        self.config.model_storage.save_model(self.config.model_path, model, args)
 
-    @abstractmethod
-    def predict(self, x):
-        pass
+    def __is_selected(self, metric):
+        return metric["name"] in self.config.selected_fields
 
-    def save_model(self, model):
-        if model is not None:
-            model_b = pickle.dumps(model, protocol=None, fix_imports=True)
-            self.train_config.getRedisClient().set(self.train_config.model_name, model_b)
-            logger.info("Model saved to redis")
+    def __get_map(self):
+        initial_dict = {}
+        for metric in self.config.selected_fields:
+            initial_dict[metric] = pd.Series([], dtype=float)
+        return initial_dict
+
+    def __meet_size(self, series):
+        return len(series) == self.config.hyper_params["window_size"]
+
+    def __exceed_size(self, series):
+        return len(series) > self.config.hyper_params["window_size"]
+
+    def __all_meet_size(self):
+        return self.count == self.metric_len
+
+    def __load_window(self, message_value):
+        metric_name = message_value['name']
+        metric_value = message_value['value']
+        metric_time = message_value['timestamp']
+        self.metric_map[metric_name] = pd.concat(
+            [self.metric_map[metric_name], pd.Series(metric_value, index=[parse_date(metric_time)])])
+
+        if self.__meet_size(self.metric_map[metric_name]):
+            self.count += 1
+        elif self.__exceed_size(self.metric_map[metric_name]):
+            logger.error("{} is collected faster".format(metric_name))
+
+    def __window_pop(self):
+        # update window
+        for metric in self.config.selected_fields:
+            self.metric_map[metric] = self.metric_map[metric].iloc[self.config.hyper_params["window_step"]:]
+        # update time window
+        self.time_window = self.time_window[self.config.hyper_params["window_step"]:]
+        # clear count
+        self.count = 0
+
+    def __run_model(self):
+        # get dataframe
+        metric_series_list = [self.metric_map[metric] for metric in self.config.selected_fields]
+        metric_df = pd.concat(metric_series_list, axis=1)
+        metric_df.columns = self.config.selected_fields  # set column names after concat
+        # run model in window
+        logger.info("window dataframe for inference:\n {}".format(metric_df))
+        result_series = self.inference(metric_df)
+        logger.info("inference result series:\n {}".format(result_series))
+        # store result
+        if self.first_run:
+            self.config.result_storage.store_result(self.config.result_path, self.config.algorithm.get_name(),
+                                                    self.config.dataset_start_time, self.config.dataset_end_time,
+                                                    result_series)
+            self.first_run = False
         else:
-            logger.error("Model is None, not saving")
+            self.config.result_storage.store_result(self.config.result_path, self.config.algorithm.get_name(),
+                                                    self.config.dataset_start_time, self.config.dataset_end_time,
+                                                    result_series[-self.config.hyper_params["window_step"]:])
 
-    def load_model(self):
-        logger.info("Loading model from redis")
-        try:
-            model_b = self.inference_config.getRedisClient().get(self.inference_config.model_name)
-            model = pickle.loads(model_b)
-            logger.info("Model loaded from redis")
-        except Exception as e:
-            logger.error("Error loading model from redis: {}".format(e))
-            model = None
-        return model
+    def __inference(self):
+        logger.info("..............Starting inference..............")
+        for message in self.config.inference_datasource.get_stream_handler():
+            message_value = message.value
+            message_value["value"] = float(message_value["value"])
+            logger.info("current message value is:\n {}".format(message_value))
+            if self.__is_selected(message_value):
+                self.__load_window(message_value)
+                if self.__all_meet_size():
+                    self.__run_model()
+                    self.__window_pop()
 
-    def start(self):
-        mode = str(self.mode).lower()
-        if mode == "train":
-            self.train()
-        elif mode == "inference":
-            self.inference()
-
-    @abstractmethod
-    def train_model(self, frame) -> object:
-        pass
-
-    def preprocess(self, frame):
-        # sort by timestamp
-        frame = frame.sort_values(by="timestamp")
-
-        # drop _id
-        frame.drop("_id", axis=1, inplace=True)
-
-        # fill missing values
-        frame.fillna(method="ffill", inplace=True)
-
-        # drop timestamp
-        frame.drop("timestamp", axis=1, inplace=True)
-
-        # drop constant columns
-        frame = frame.loc[:, frame.apply(pd.Series.nunique) != 1]
-        return frame
+    def get_model(self):
+        return self.model
 
     @abstractmethod
-    def inference(self):
+    def build_model(self, hyper_params: dict) -> object:
         pass
 
+    @abstractmethod
+    def train(self, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
+        pass
 
-if __name__ == '__main__':
-    algo = AlgoTemplate()
-    algo.start()
+    @abstractmethod
+    def inference(self, df: pd.DataFrame) -> pd.Series:
+        pass

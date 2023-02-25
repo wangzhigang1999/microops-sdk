@@ -17,21 +17,22 @@ class Config(object):
     KAFKA_CONST = "KAFKA"
 
     def __init__(self):
-        self.mode = os.environ.get('MODE', 'TRAIN')
+        self.__mode = os.environ.get('MODE', 'TRAIN')
         # logger.info("current mode is {}".format(self.mode))
         self.json_config = json.loads(os.environ.get('CONFIG', '{}'))
 
-        self.model_path = self.json_config["modelPath"]
-        self.result_path = self.json_config["resultPath"]
+        self.__model_path = self.json_config["modelPath"]
+        self.__result_path = self.json_config["resultPath"]
 
         self.__init_storage()
         self.__init_datasource()
 
-        self.algorithm = Algorithm(self.json_config["algorithm"])
-        self.dataset_start_time = self.json_config["datasetStartTime"]
-        self.dataset_end_time = self.json_config["datasetEndTime"]
-        self.selected_fields = self.json_config["selectedFields"]
-        self.hyper_parameters = self.json_config["hyperParams"]
+        self.__algorithm = Algorithm(self.json_config["algorithm"])
+        self.__dataset_start_time = self.json_config["datasetStartTime"]
+        self.__dataset_end_time = self.json_config["datasetEndTime"]
+        self.__selected_fields = self.json_config["selectedFields"]
+
+        self.__hyper_params = self.json_config["hyperParams"]
 
     def __init_storage(self):
         storage_list = self.json_config["storage"]
@@ -74,14 +75,53 @@ class Config(object):
             logger.error("unknown datasource type: {}".format(datasource["type"]))
             return
 
-    def get_model_storage(self):
+    @property
+    def mode(self):
+        return self.__mode
+
+    @property
+    def model_path(self):
+        return self.__model_path
+
+    @property
+    def result_path(self):
+        return self.__result_path
+
+    @property
+    def algorithm(self):
+        return self.__algorithm
+
+    @property
+    def model_storage(self):
         return self.__model_storage
 
-    def get_result_storage(self):
+    @property
+    def result_storage(self):
         return self.__result_storage
 
-    def get_train_datasource(self):
+    @property
+    def train_datasource(self):
         return self.__train_datasource
 
-    def get_inference_datasource(self):
+    @property
+    def inference_datasource(self):
         return self.__inference_datasource
+
+    @property
+    def dataset_start_time(self):
+        return self.__dataset_start_time
+
+    @property
+    def dataset_end_time(self):
+        return self.__dataset_end_time
+
+    @property
+    def selected_fields(self):
+        return self.__selected_fields
+
+    @property
+    def hyper_params(self):
+        return self.__hyper_params
+
+
+
