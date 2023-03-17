@@ -34,6 +34,8 @@ class Config(object):
 
         self.__hyper_params = self.json_config["hyperParams"]
 
+        self.__target = self.json_config["target"] if self.mode != "TRAIN" else None
+
     def __init_storage(self):
         storage_list = self.json_config["storage"]
         for storage in storage_list:
@@ -123,5 +125,6 @@ class Config(object):
     def hyper_params(self):
         return self.__hyper_params
 
-
-
+    @property
+    def target(self):
+        return self.__target
