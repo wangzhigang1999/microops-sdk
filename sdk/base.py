@@ -9,6 +9,8 @@ from sdk.config.config import Config
 
 
 def parse_date(date_str):
+    if isinstance(date_str, int):
+        return date_str
     t = datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=tz.tzutc())
     return int(t.timestamp())
 
@@ -93,7 +95,7 @@ class AlgoTemplate:
         metric_series_list = [self.metric_map[metric] for metric in self.config.selected_fields]
         metric_df = pd.concat(metric_series_list, axis=1)
         metric_df.columns = self.config.selected_fields  # set column names after concat
-        metric_df = metric_df.reindex(columns=sorted(metric_df.columns)) # order df columns
+        metric_df = metric_df.reindex(columns=sorted(metric_df.columns))  # order df columns
         # run model in window
         logger.info("window dataframe for inference:\n {}".format(metric_df))
         result_series = self.inference(self.model, self.args, metric_df)
