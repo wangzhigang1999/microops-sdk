@@ -61,10 +61,10 @@ class AlgoTemplate:
         return initial_dict
 
     def __meet_size(self, series):
-        return len(series) == self.config.hyper_params["window_size"]
+        return len(series) == int(self.config.hyper_params["window_size"])
 
     def __exceed_size(self, series):
-        return len(series) > self.config.hyper_params["window_size"]
+        return len(series) > int(self.config.hyper_params["window_size"])
 
     def __all_meet_size(self):
         return self.count == self.metric_len
