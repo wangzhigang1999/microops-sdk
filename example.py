@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from sklearn.neighbors import KNeighborsClassifier
 
@@ -14,7 +15,8 @@ class Example(AlgoTemplate):
         return model
 
     def train(self, model: KNeighborsClassifier, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
-        model = model.fit(df, 0)
+        labels = np.random.randint(0, 2, size=(len(df), 1))
+        model = model.fit(df, labels)
         return model, hyper_params
 
     def inference(self, model: KNeighborsClassifier, args: dict, df: pd.DataFrame) -> pd.Series:
