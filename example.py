@@ -8,6 +8,8 @@ class Example(AlgoTemplate):
 
     def build_model(self, hyper_params: dict) -> object:
         # knn
+        hello = hyper_params.get('hello')
+        assert hello == 'world', 'hello world'
         model = KNeighborsClassifier()
         return model
 
