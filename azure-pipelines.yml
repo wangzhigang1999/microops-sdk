@@ -32,5 +32,5 @@ stages:
               containerRegistry: 'ACR'
               repository: "$(image-repo)"
               command: 'buildAndPush'
-              tags: '$(Build.BuildNumber)-$(SHORT_COMMIT)'
+              tags: 'latest'
               Dockerfile: '**/Dockerfile'
