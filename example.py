@@ -19,8 +19,9 @@ class Example(AlgoTemplate):
         model = model.fit(df, labels)
         return model, hyper_params
 
-    def inference(self, model: KNeighborsClassifier, args: dict, df: pd.DataFrame) -> pd.Series:
-        return pd.Series(model.predict(df))
+    def inference(self, model: KNeighborsClassifier, args: dict, x: pd.DataFrame) -> pd.Series:
+        index = x.index
+        return pd.Series(model.predict(x), index=index)
 
 
 if __name__ == '__main__':
