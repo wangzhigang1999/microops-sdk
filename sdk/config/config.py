@@ -36,6 +36,13 @@ class Config(object):
 
         self.__target = self.json_config["target"] if self.mode != "TRAIN" else None
 
+        # for each key, try to convert to int, if not possible, keep it as string
+        for key in self.__hyper_params:
+            try:
+                self.__hyper_params[key] = int(self.__hyper_params[key])
+            except ValueError:
+                pass
+
     def __init_storage(self):
         storage_list = self.json_config["storage"]
         for storage in storage_list:
