@@ -10,7 +10,6 @@ resources:
   - repo: self
 
 pool: "Azure Pipelines"
-#pool: "Default"
 
 variables:
   image-repo: 'bupt2018/sdk-example'
@@ -23,10 +22,6 @@ stages:
         displayName: BuildAndPush
 
         steps:
-          - task: CmdLine@2
-            inputs:
-              script: ' x=`echo "$(Build.SourceVersion)" | head -c 8`; echo "##vso[task.setvariable variable=SHORT_COMMIT]$x"'
-
           - task: Docker@2
             inputs:
               containerRegistry: 'ACR'
