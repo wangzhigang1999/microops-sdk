@@ -24,12 +24,8 @@ Dataset 中包含着一些dataset，这些dataset都是平台自动收集而来�
 
 > 预览
 
-点击**Preview**按钮，可以选择预览的数据量，也可以点击指标名进行筛选。
-
-可以拖动图标**下方和右侧**的滑块进行区间缩小、放大。
-
-![image-20230902104532458](https://wanz-bucket.oss-cn-beijing.aliyuncs.com/typora/image-20230902104532458.png)
+![image-20231029210442769](https://wanz-bucket.oss-cn-beijing.aliyuncs.com/typora/image-20231029210442769.png)
 
 > 下载
 
-点击下载，可以以Json的形式把数据集下载到本地使用
+点击下载，可以以`CSV`的格式把数据集下载到本地使用

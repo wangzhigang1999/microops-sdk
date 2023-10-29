@@ -7,15 +7,28 @@
     <meta name="description" content="Description">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
     <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/docsify@4/lib/themes/vue.css">
+    <style>
+        body > main > aside > h1 > a > img {
+            width: 30%;
+            height: auto;
+        }
+
+        .sidebar-nav{
+            margin: 20px;
+        }
+
+
+    </style>
 </head>
 <body>
 <div id="app"></div>
 <script>
     window.$docsify = {
-        name: '',
+        name: 'MicroOps',
+        logo: './logo-no-text.svg',
         repo: '',
-        coverpage: false
-
+        coverpage: false,
+        auto2top: true,
     }
 </script>
 <!-- Docsify v4 -->

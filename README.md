@@ -2,11 +2,13 @@
 
 ![image-20231029204256689](https://wanz-bucket.oss-cn-beijing.aliyuncs.com/typora/image-20231029204256689.png)
 
+**点击下面的标题，查看详细的介绍。**
+
 ## [Benchmark](docs/zh/benchmark.md)
 
-一个用于基准测试的微服务系统被称为benchmark，在MicroOps中以部署文件的形式维护。
+一个用于基准测试的微服务系统被称为benchmark，在 MicroOps 中以部署文件的形式维护。
 
-Benchmark模块负责基准微服务部署文件的托管，集成了用户上传的微服务部署脚本与相关介绍，用户可以管理自己的benchmark、查看与下载他人公开的benchmark，
+Benchmark 模块负责基准微服务部署文件的托管，集成了用户上传的微服务部署脚本与相关介绍，用户可以管理自己的benchmark、查看与下载他人公开的benchmark，
 
 以及部署benchmark以创建一个testbed。
 

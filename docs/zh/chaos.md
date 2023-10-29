@@ -2,20 +2,20 @@
 
 ## 故障实验列表
 
-![chaos](assets/doc/img/chaos.png)
+<img src="docs/img/chaos.png"  alt="benchmark" align=center />
 
 Chaos模块的首页由三个包含故障实验列表的tab子页面组成，其中：
 - Experiments：展示了`单个故障实验`的历史记录。
 - Schedules：展示了`定时故障实验`的历史记录。
 - Archives：展示了归档后的Experiments和Schedules。
 
-详细的实验类型与配置见[注入](/doc/zh/chaos.md#注入)部分的文档。
+详细的实验类型与配置见[注入](/docs/zh/chaos.md#注入"  alt="benchmark" align=center />部分的文档。
 
 **注**：本模块仅向用户开放Kubernetes的服务故障注入，并不支持用户对底层物理机注入故障，这会威胁到其他用户资源与平台安全。
 
 ### Experiments
 
-![chaos-experiments](assets/doc/img/chaos-experiments.png)
+<img src="docs/img/chaos-experiments.png"  alt="benchmark" align=center />
 
 Experiments表格中有七列，其中：
 1. Experiment Name：实验的名称，由平台根据`type-uid`的格式自动生成，`type`为注入的故障类型，`uid`为uuid生成的唯一标识符。
@@ -30,7 +30,7 @@ Experiments表格中有七列，其中：
 
 ### Schedules
 
-![chaos-schedules](assets/doc/img/chaos-schedules.png)
+<img src="docs/img/chaos-schedules.png"  alt="benchmark" align=center />
 
 Schedule是定时任务，可以在固定的时间（或根据固定的时间间隔）自动新建故障实验，表格中有四列，其中：
 1. Schedule Name：定时故障任务的名称，同样由平台自动生成，格式为`schedule-type-uid`，`type`为注入的故障类型，`uid`为uuid生成的唯一标识符。
@@ -46,13 +46,13 @@ Schedule是定时任务，可以在固定的时间（或根据固定的时间间
 
 ### Archives
 
-![chaos-archives](assets/doc/img/chaos-archives.png)
+<img src="docs/img/chaos-archives.png"  alt="benchmark" align=center />
 
 Archives是归档后的故障实验，表格字段相同，不再赘述。但是操作略有不同，归档后的实验会在30天后会自动永久删除，用户也可以自行删除。
 
 ## 故障注入
 
- <img src="assets/doc/img/chaos-add.png" width = "800" height = "800" alt="chaos-add"/>
+ <img src="docs/img/chaos-add.png" alt="chaos-add"/>
 
 点击Chaos模块首页的Add按钮进入到故障注入的配置页面，在该页面用户可以选择故障类型、注入目标与定时的时间间隔。
 
