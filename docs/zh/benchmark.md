@@ -2,7 +2,7 @@
 
 ## Benchmark列表
 
- <img src="img/benchmark.png"  alt="benchmark" align=center />
+ <img src="../img/benchmark.png"  alt="benchmark" align=center />
 
 [//]: # (![benchmark]&#40;img/benchmark.png&#41;)
 
@@ -20,19 +20,19 @@ Benchmark模块首页是以卡片形式展示的benchmark微服务列表，可�
 
 ## 添加Benchmark
 
- <img src="img/benchmark-add.png"  alt="benchmark-add" align=center />
+ <img src="../img/benchmark-add.png"  alt="benchmark-add" align=center />
 
 按输入框的提示，填写benchmark名字与描述（将会显示在首页的卡片中）、选择benchmark可见性并上传部署相关的文件即可。
 
 **注：请仔细阅读平台对上传文件的要求，并根据错误提示修改**。
 
- <img src="img/benchmark-limit.png"  alt="benchmark-limit" align=center />
+ <img src="../img/benchmark-limit.png"  alt="benchmark-limit" align=center />
 
 简单来说，平台只允许上传README以及用于部署的YAML文件，而且YAML文件只允许存在Deployment、Service、Configmap以及Secret四种资源。
 
 ## Benchmark文件
 
-![benchmark文件列表](img/benchmark-files.png)
+![benchmark文件列表](../img/benchmark-files.png)
 
 文件页以类似Github的界面展示benchmark相关文件，页面右上角支持多种操作：
 - 如果你是benchmark的拥有者，则你可以下载、更换以及删除benchmark文件。
