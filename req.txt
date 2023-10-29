@@ -1,7 +1,0 @@
-loguru
-redis
-kafka-python
-pymongo
-pandas
-scikit-learn 
-numpy
