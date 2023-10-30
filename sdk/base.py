@@ -103,12 +103,12 @@ class AlgoTemplate:
         # store result
         if self.first_run:
             self.config.result_storage.store_result(self.config.result_path, self.config.algorithm.get_name(),
-                                                    self.config.dataset_start_time, self.config.dataset_end_time,
+                                                    self.config.selected_fields, self.config.target,
                                                     result_series)
             self.first_run = False
         else:
             self.config.result_storage.store_result(self.config.result_path, self.config.algorithm.get_name(),
-                                                    self.config.dataset_start_time, self.config.dataset_end_time,
+                                                    self.config.selected_fields, self.config.target,
                                                     result_series[-self.config.hyper_params["window_step"]:])
 
     def __inference(self):

@@ -26,9 +26,10 @@ class Example(AlgoTemplate):
         for feature in x.columns:
             mean = x[feature].mean()
             std = x[feature].std()
-            x[feature] = x[feature].apply(lambda x: 0 if x > mean + 3 * std or x < mean - 3 * std else x)
+            x[feature] = x[feature].apply(lambda x: 1 if x > mean + 3 * std or x < mean - 3 * std else 0)
 
-        result = x.sum(axis=1)
+        # if any feature is 1,we set the result to 1
+        result = x.apply(lambda x: 1 if x.any() else 0, axis=1)
 
         logger.info("inference result series:\n {}".format(result))
 
