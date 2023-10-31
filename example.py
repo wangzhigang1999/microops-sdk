@@ -1,5 +1,4 @@
 import pandas as pd
-from sklearn.neighbors import KNeighborsClassifier
 
 from sdk.base import AlgoTemplate
 
@@ -12,26 +11,39 @@ class Example(AlgoTemplate):
         # get hyper params to build your model
         hello = hyper_params.get('hello')
         assert hello == 'world', 'hello world'
-        # 3-sigma rule
-        return "Your model object"
 
-    def train(self, model: KNeighborsClassifier, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
+        # build your model here and return it
+        return {"hello": hello}
+
+    def train(self, model: dict, df: pd.DataFrame, hyper_params: dict) -> (object, dict):
+        # calculate the mean and std of each feature
+        for feature in df.columns:
+            mean = df[feature].mean()
+            std = df[feature].std()
+            model[feature] = {'mean': mean, 'std': std}
+        logger.info(f"model: {model}")
+
         return model, hyper_params
 
-    def inference(self, model: KNeighborsClassifier, args: dict, x: pd.DataFrame) -> pd.Series:
+    def inference(self, model: dict, args: dict, x: pd.DataFrame) -> pd.Series:
         index = x.index
 
-        # for each feature,we calculate 3-sigma rule
-        # if the value is out of 3-sigma rule,we set it to 0
+        result = []
         for feature in x.columns:
-            mean = x[feature].mean()
-            std = x[feature].std()
-            x[feature] = x[feature].apply(lambda x: 1 if x > mean + 3 * std or x < mean - 3 * std else 0)
+            mean = model[feature]['mean']
+            std = model[feature]['std']
 
-        # if any feature is 1,we set the result to 1
-        result = x.apply(lambda x: 1 if x.any() else 0, axis=1)
+            # for each feature, using 3-sigma rule to filter the outliers
+            x[feature] = x[feature].apply(lambda x: 0 if abs(x - mean) < 3 * std else 1)
 
-        logger.info("inference result series:\n {}".format(result))
+        # for each row, if all features are 0, then it is a normal row, otherwise it is an outlier
+        for _, row in x.iterrows():
+            if row.sum() == 0:
+                result.append(0)
+            else:
+                result.append(1)
+
+        logger.info(f"result: {result}")
 
         return pd.Series(result, index=index)
 
