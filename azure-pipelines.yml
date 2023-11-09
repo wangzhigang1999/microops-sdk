@@ -12,7 +12,7 @@ resources:
 pool: "Azure Pipelines"
 
 variables:
-  image-repo: 'bupt2018/sdk-example'
+  image-repo: 'sdk-example'
 
 stages:
   - stage: BuildAndPush

@@ -46,8 +46,6 @@ To make your algorithm accessible on MicroOps, you should containerize it using 
 
 1. Click the "Add" button.
 
-	![Add Algorithm](https://wanz-bucket.oss-cn-beijing.aliyuncs.com/typora/image-20231024162559919.png)
-
 2. Fill in the required information.
 
 - **Name**: Provide a name for your algorithm.
